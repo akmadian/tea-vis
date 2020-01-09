@@ -33,7 +33,7 @@ class ProductCatalog:
         }
     
     def buildCSV(self):
-        path = 'C:/src/tea-vis/src/data/yscatalog-tree2.csv'
+        path = 'C:/src/tea-vis/src/data/yscatalog-tree3.csv'
         with open(path, 'w', newline="", encoding="utf-8") as outcsv:
             writer = csv.writer(outcsv)
             writer.writerow(['size', 'path'])
@@ -51,13 +51,14 @@ class ProductCatalog:
             for product in self.products:
                 if product.standardType != 'Teaware' and not 'mang' in product.name and not 'Mang' in product.name:
                     teaType = product.standardType if not self.isPuErh(product.standardType) else "PuErh/{}".format(product.standardType)
-                    path = "YunnanSourcing/{}/{}".format(teaType, product.name)
+                    path = "YunnanSourcing/{}/{}".format(teaType.strip(), product.name.strip())
                     writer.writerow(['', path])
 
+                    """
                     for variant in product.variants:
-                        variantPath = "{}/{}".format(path, variant['option1'].replace('/', ' '))
+                        variantPath = "{}/{}".format(path.strip(), variant['option1'].replace('/', ' ').strip())
 
-                        writer.writerow(['', variantPath])
+                        writer.writerow(['', variantPath])"""
 
     def isPuErh(self, teaType):
         if "Sheng" in teaType or "Shou" in teaType or "Pu Erh" in teaType:
@@ -179,8 +180,11 @@ class YSProduct:
 
 PRODUCT_CATALOG = ProductCatalog()
 
-def get_page(url, page):
+def get_page(url, page, collection_handle):
+    print("FETCHING NEW PAGE")
     full_url = url
+    if collection_handle:
+        full_url += '/collections/{}'.format(collection_handle)
     full_url += '/products.json'
     req = urllib.request.Request(
         full_url + '?limit=250&page={}'.format(page),
@@ -191,7 +195,6 @@ def get_page(url, page):
     )
     while True:
         try:
-            print("Getting new page...")
             data = urllib.request.urlopen(req).read()
             break
         except HTTPError:
@@ -206,7 +209,7 @@ def get_page(url, page):
 def get_page_collections(url):
     full_url = url + '/collections.json'
     page = 1
-    while True:
+    while page < 5:
         req = urllib.request.Request(
             full_url + '?page={}'.format(page),
             data=None,
@@ -255,8 +258,8 @@ def getProducts(url):
     page = 1
     products = get_page(url, page)
     print("PRODUCTS FOR PAGE {}".format(page))
-    print([str(product['title']) + '\n' for product in products])
-    while products:
+    print([str(product['title']) for product in products])
+    while products and page < 10:
         for product in products:
             productObj = YSProduct(product)
             PRODUCT_CATALOG.products.append(productObj)
@@ -273,6 +276,8 @@ def extract_products_collection(url, col):
     products = get_page(url, page, col)
     while products:
         for product in products:
+            yield product
+            """
             title = product['title']
             product_type = product['product_type']
             product_url = url + '/products/' + product['handle']
@@ -312,20 +317,21 @@ def extract_products_collection(url, col):
                 for k in row:
                     row[k] = str(row[k].strip()) if row[k] else ''
                 yield row
-
+                """
         page += 1
         products = get_page(url, page, col)
 
-def extract_products(url, path, collections=None):
+def extract_products(url, collections=None):
     seen_variants = set()
     for col in get_page_collections(url):
         if collections and col['handle'] not in collections:
             continue
         handle = col['handle']
         for product in extract_products_collection(url, handle):
-            variant_id = product['variant_id']
-            if variant_id in seen_variants:
-                continue
+            for variant in product['variants']:        
+                variant_id = variant['id']
+                if variant_id in seen_variants:
+                    continue
 
             seen_variants.add(variant_id)
             productObj = YSProduct(product)
@@ -345,5 +351,6 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     if len(args) > 0:
         url = fix_url(args[0])
-        getProducts(url)
+        extract_products(url)
+        print("TOTAL PRODUCTS: {}".format(PRODUCT_CATALOG.numProducts()))
         PRODUCT_CATALOG.buildCSV()
