@@ -1,0 +1,23 @@
+{
+    "nodes": [
+      {"id": "YunnanSourcing.com", "group": 1},
+      {"id": "Pu Erh", "group": 2},
+      {"id": "Black", "group": 3},
+      {"id": "Oolong", "group": 4},
+      {"id": "Green", "group": 5},
+      {"id": "Yellow", "group": 6},
+      {"id": "White", "group": 7},
+      {"id": "Sheng", "group": 8},
+            {"id": "Shou", "group": 9}
+    ],
+    "links": [
+      {"source": "YunnanSourcing.com", "target": "Pu Erh", "value": 1},
+      {"source": "YunnanSourcing.com", "target": "Yellow", "value": 1},
+      {"source": "YunnanSourcing.com", "target": "White", "value": 1},
+      {"source": "YunnanSourcing.com", "target": "Green", "value": 1},
+      {"source": "YunnanSourcing.com", "target": "Oolong", "value": 1},
+      {"source": "YunnanSourcing.com", "target": "Black", "value": 1},
+      {"source": "Pu Erh", "target": "Sheng", "value": 1},
+            {"source": "Pu Erh", "target": "Shou", "value": 1}
+    ]
+  }

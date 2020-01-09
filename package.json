@@ -1,0 +1,33 @@
+{
+  "name": "tea-vis",
+  "version": "1.0.0",
+  "description": "Visualizing tea website product catalogs with React and D3!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "webpack-dev-server --content-base src --hot --inline"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akmadian/tea-vis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akmadian/tea-vis/issues"
+  },
+  "homepage": "https://github.com/akmadian/tea-vis#readme",
+  "devDependencies": {
+    "css-loader": "^3.4.1",
+    "node-sass": "^4.13.0",
+    "sass-loader": "^8.0.0",
+    "style-loader": "^1.1.2",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1"
+  },
+  "dependencies": {
+    "lodash-webpack-plugin": "^0.11.5"
+  }
+}

@@ -1,0 +1,97 @@
+<head>
+    <style> body { margin: 0; } </style>
+
+    <script src="//unpkg.com/d3-dsv"></script>
+    <script src="//unpkg.com/dat.gui"></script>
+    <script src="//unpkg.com/d3-quadtree"></script>
+    <script src="//unpkg.com/d3-force"></script>
+
+
+    <script src="//unpkg.com/force-graph"></script>
+    <!--<script src="../../dist/force-graph.js"></script>-->
+  </head>
+  
+  <body>
+    <div id="graph"></div>
+    <script>
+        const controls = { 'DAG Orientation': 'lr'};
+    const gui = new dat.GUI();
+    gui.add(controls, 'DAG Orientation', ['td', 'lr', 'radialout', 'radialin',null])
+      .onChange(orientation => graph && graph.dagMode(orientation));
+    // graph config
+    const NODE_REL_SIZE = 1;
+    const graph = ForceGraph()
+        .dagMode('lr')
+        .dagLevelDistance(300)
+        .backgroundColor('#101020')
+        .linkColor(() => 'rgba(255,255,255,0.2)')
+        .nodeRelSize(NODE_REL_SIZE)
+        .nodeId('path')
+        .nodeVal(node => 100 / (node.level + 1))
+        .nodeLabel(node => node.path.split('/').pop())
+        .nodeAutoColorBy('module')
+        .linkDirectionalParticles(2)
+        .linkDirectionalParticleWidth(2)
+        .d3Force('collision', d3.forceCollide(node => Math.sqrt(100 / (node.level + 1)) * NODE_REL_SIZE))
+        .d3VelocityDecay(0.3)
+        .onNodeClick(node => {
+            // Center/zoom on node
+            graph.centerAt(node.x, node.y, 1000);
+            graph.zoom(8, 2000);
+        });
+
+    fetch('./data/yscatalog-tree2.csv')
+      .then(r => r.text())
+      .then(d3.csvParse)
+      .then(data => {
+        const nodes = [], links = [];
+        data.forEach(({ size, path }) => {
+          const levels = path.split('/'),
+            level = levels.length - 1,
+            module = level > 0 ? levels[1] : null,
+            leaf = levels.pop(),
+            parent = levels.join('/');
+          const node = {
+            path,
+            leaf,
+            module,
+            size: +size || 20,
+            level,
+            label: path.split('/').pop()
+          };
+          nodes.push(node);
+          if (parent) {
+            links.push({source: parent, target: path, targetNode: node});
+          }
+        });
+        console.log(nodes)
+        console.log(links)
+        graph(document.getElementById('graph'))
+          .graphData({ nodes, links });
+      });
+        /*
+        fetch('./data/yscatalog-tree.json').then(res => res.json().then(data => {
+
+            const graph = ForceGraph()
+            (document.getElementById('graph'))
+                .graphData(data)
+                .nodeVal('name')
+                .linkTarget('dest')
+                .backgroundColor('#101020')
+                .linkColor(() => 'rgba(255,255,255,0.2)')
+                .nodeRelSize(6)
+                .nodeCanvasObject((node, ctx, globalScale) => {
+                    const label = node.name;
+                    const fontSize = 12/globalScale;
+                    ctx.font = `${fontSize}px Sans-Serif`;
+                    const textWidth = ctx.measureText(label).width;
+                    const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = node.color;
+                    ctx.fillText(label, node.x, node.y);
+                });
+        }))*/
+    </script>
+  </body>
