@@ -1,127 +1,212 @@
-<head>
-    <style> 
-        body { 
-            font-family: "Trebuchet MS", Helvetica, sans-serif;
-            margin: 0; 
-        } 
-        
-        #heading {
-            position: absolute;
-            display: block;
-            color: rgba(255, 255, 255, .6);
-            top: 0;
-            left: 0;
-            z-index: 100;
-            margin-top: 2rem;
-            margin-left: 2rem;
-        }
+<!DOCTYPE html>
+<html lang="en">
+    <head>
 
-        #heading h1 {
-            margin: 0;
-        }
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+        <script src="//unpkg.com/d3-dsv"></script>
+        <script src="//unpkg.com/dat.gui"></script>
+        <script src="//unpkg.com/d3-quadtree"></script>
+        <script src="//unpkg.com/d3-force"></script>
+    
+        <script src="//unpkg.com/force-graph"></script>
+        <!--<script src="../../dist/force-graph.js"></script>-->
 
-
-        .dot {
-            height: .8rem;
-            width: .8rem;
-            background-color: #ff0000;
-            border-radius: 50%;
-            display: inline-block;
-            vertical-align: middle;
-        }
-    </style>
-
-    <script src="//unpkg.com/d3-dsv"></script>
-    <script src="//unpkg.com/dat.gui"></script>
-    <script src="//unpkg.com/d3-quadtree"></script>
-    <script src="//unpkg.com/d3-force"></script>
-
-
-    <script src="//unpkg.com/force-graph"></script>
-    <!--<script src="../../dist/force-graph.js"></script>-->
-</head>
-  
-<body>
-    <div id="heading">
-        <h1>Yunnan Sourcing Catalog</h1>
-        <p id="totalNodes"></p>
-        <div>
-            Color Key <br>
-            <span>
-                <span class="dot"></span>Black
-            </span>
+        <link rel="stylesheet" href="./styles/styles.css">
+    </head>
+      
+    <body>
+        <div id="heading">
+            <h1>Tea Catalog Visualization</h1>
+            <b id="totalNodes"></b><br>
+            <div id="colorkey">
+                Color Key <br>
+                <div id="colorkey-colors">
+                    <div class="black">Black</div>
+                    <div class="white">White</div>
+                    <div class="oolong">Oolong</div>
+                    <div class="green">Green</div>
+                    <div class="yellow">Yellow</div>
+                    <div class="shengBlue">Sheng</div>
+                    <div class="shouBlue">Shou</div>
+                    <div class="teaware">Teaware</div>
+                </div>
+            </div>
         </div>
-    </div>
-    <div id="graph"></div>
-    <script>
-    const controls = { 'DAG Orientation': 'radialout'};
-    const gui = new dat.GUI();
-    gui.add(controls, 'DAG Orientation', ['td', 'lr', 'radialout', 'radialin',null])
-      .onChange(orientation => graph && graph.dagMode(orientation));
-    // graph config
-    const NODE_REL_SIZE = 1;
-    const graph = ForceGraph()
-        .dagMode('radialout')
-        .dagLevelDistance(200)
-        .backgroundColor('#101020')
-        .linkColor(() => 'rgba(255,255,255,0.2)')
-        .nodeRelSize(NODE_REL_SIZE)
-        .nodeId('path')
-        .nodeVal(node => 100 / (node.level + 1))
-        .nodeLabel(node => node.path.split('/').pop())/*
-        .nodeColor(node => {
-            if (node.path.includes('sheng') && node.path.includes('pu')) return 'aqua'
-            else if (node.path.includes('shou') && node.path.includes('pu')) return 'blue'
-            else if (node.path.includes('oolong')) return 'orange'
-            else if (node.path.includes('black')) return 'rgb(255, 0, 0)'
-            else if (node.path.includes('yellow')) return 'yellow'
-            else if (node.path.includes('white')) return 'grey'
-            else if (node.path.includes('green')) return 'green'
-        })*/
-        .nodeAutoColorBy('module')
-        .linkDirectionalParticles(2)
-        .linkDirectionalParticleWidth(2)
-        .d3Force('collision', d3.forceCollide(node => Math.sqrt(100 / (node.level + 1)) * NODE_REL_SIZE))
-        .d3VelocityDecay(0.3)
-        .onNodeClick(node => {
-            // Center/zoom on node
-            graph.centerAt(node.x, node.y, 1000);
-            graph.zoom(8, 2000);
-        })
-        .onNodeDragEnd(node => {
-            node.fx = node.x;
-            node.fy = node.y;
-        })
+        <div id="graph"></div>
+        <!--
+        <div id="about-modal">
+            <h1>About</h1>
+            <hr>
+            <a href="#">Source Code</a>
+        </div>
+        <footer>
+            <div class="col">
+                <a href="#">View this page's source code</a>
+            </div>
+            <div class="col">TEST</div>
+            <div class="col">TEST</div>
+            <div class="col">TEST</div>
+        </footer>-->
+        <script>
+            function mapTypeToColor(path) {
+                if (path === 'YunnanSourcing') return '#A6CEE3'
+                else if (path === 'YunnanSourcing/PuErh') return '#000080'
+                else if (path === 'YunnanSourcing/PuErh/Sheng') return '#0080FE'
+                else if (path === 'YunnanSourcing/PuErh/Shou') return '#0F52BA'
+                else if (path === 'YunnanSourcing/Black') return '#FF0000'
+                else if (path === 'YunnanSourcing/White') return '#FFFAFA'
+                else if (path === 'YunnanSourcing/Yellow') return '#FFC100'
+                else if (path === 'YunnanSourcing/Green') return '#3CD80E'
+                else if (path === 'YunnanSourcing/Oolong') return '#FF7400'
+                else if (path === 'YunnanSourcing/Teaware') return '#A020F0'
+                else {
+                    type = path.split('/')[1]
+                    if (type === 'PuErh') {
+                        if (path.split('/')[2] === 'Sheng') {
+                            return '#0080FE'
+                        } else {
+                            return '#0F52BA'
+                        }
+                    }
+                    else {
+                        if (type === 'Black') return '#FF0000'
+                        else if (type === 'White') return '#FFFAFA'
+                        else if (type === 'Yellow') return '#FFC100'
+                        else if (type === 'Green') return '#3CD80E'
+                        else if (type === 'Oolong') return '#FF7400'
+                        else if (type === 'Teaware') return '#A020F0'
+                    }
+                }
+            }
 
-    fetch('./data/yscatalog-tree3.csv')
-      .then(r => r.text())
-      .then(d3.csvParse)
-      .then(data => {
-        const nodes = [], links = [];
-        data.forEach(({ size, path }) => {
-          const levels = path.split('/'),
-            level = levels.length - 1,
-            module = level > 0 ? levels[1] : null,
-            leaf = levels.pop(),
-            parent = levels.join('/');
-          const node = {
-            path,
-            leaf,
-            module,
-            size: +size || 20,
-            level,
-            label: path.split('/').pop()
-          };
-          nodes.push(node);
-          if (parent) {
-            links.push({source: parent, target: path, targetNode: node});
-          }
-        });
-        document.getElementById('totalNodes').innerHTML = `Total Products: ${nodes.length}`
-        console.log(nodes)
-        console.log(links)
-        graph(document.getElementById('graph'))
-          .graphData({ nodes, links });
-      });
-    </script>
-</body>
+            function fetchGraphData(vendorData) {
+                const fileName = vendorData + (controls['Include Product Variants'] ? '' : '-nv')
+                console.log('Fetching Data: ' + fileName)
+                fetch('./data/' + fileName + '.csv')
+                .then(r => r.text())
+                .then(d3.csvParse)
+                .then(data => {
+                    const nodes = [], links = [];
+                    data.forEach(({ size, path }) => {
+                        const levels = path.split('/'),
+                            level = levels.length - 1,
+                            module = level > 0 ? levels[1] : null,
+                            leaf = levels.pop(),
+                            parent = levels.join('/');
+                        const node = {
+                            path,
+                            leaf,
+                            module,
+                            size: +size || 20,
+                            level,
+                            label: path.split('/').pop()
+                        };
+                        nodes.push(node);
+                        if (parent) {
+                            links.push({source: parent, target: path, targetNode: node});
+                        }
+                    });
+                    document.getElementById('totalNodes').innerHTML = `Total Products: ${nodes.length}`
+                    console.log(nodes)
+                    console.log(links)
+                    graph(document.getElementById('graph'))
+                        .graphData({ nodes, links });
+                });
+            }
+
+            function genNodeLabel(node) {
+
+            }
+    
+            const vendorDataMap = {
+                'YunnanSourcing': 'ys', 
+                'YunnanSourcing (US)': 'ysus', 
+                'Crimson Lotus': 'cl'
+            }
+
+            const gui = new dat.GUI();
+            gui.width = screen.width * .2
+            // Add controls
+            const controls = { 
+                'Style': 'Radial In', 
+                'Vendor': 'Crimson Lotus', 
+                'Include Product Variants': false,
+                'Enable Particles': false,
+                'Link Length': 200,
+                'View this page\'s source code!': function() {
+                    console.log('view source')
+                },
+                'Total Nodes: ': 100
+            };
+            gui.add(controls, 'Style', ['Tree Down', 'Tree Right', 'Radial Out', 'Radial In', 'Circles'])
+                .onChange(orientation => {
+                    var dag
+                    switch (orientation) {
+                        case 'Tree Down': dag = 'td'; break;
+                        case 'Tree Right': dag = 'lr'; break;
+                        case 'Radial Out': dag = 'radialout'; break;
+                        case 'Radial In': dag = 'radialin'; break;
+                        default:
+                            dag = null
+                            break;
+                    }
+                    graph && graph.dagMode(dag)
+                });
+            gui.add(controls, 'Vendor', ['YunnanSourcing', 'YunnanSourcing (US)', 'Crimson Lotus'])
+                .onChange(vendor => {
+                    fetchGraphData(vendorDataMap[vendor])
+                })
+            gui.add(controls, 'Include Product Variants', false)
+                .onChange(vendor => {
+                    fetchGraphData(vendorDataMap[vendor])
+                }) 
+            gui.add(controls, 'Enable Particles', false)
+                .onChange(enabled => {
+                    if (enabled) {
+                        graph
+                        .linkDirectionalParticleWidth(2)
+                    }
+                    else {
+                        graph
+                        .linkDirectionalParticleWidth(0)
+                    }
+                })
+            gui.add(controls, 'Link Length', 100, 800)
+                .onChange(value => {
+                    graph.dagLevelDistance(value)
+                })
+            gui.add(controls, 'View this page\'s source code!')
+            gui.add(controls, 'Total Nodes: ', 100)
+
+            // graph config
+            const NODE_REL_SIZE = 1.2;
+            const graph = ForceGraph()
+                .dagMode('radialin')
+                .dagLevelDistance(200)
+                .backgroundColor('#101020')
+                .linkColor(() => 'rgba(255,255,255,0.2)')
+                .nodeRelSize(NODE_REL_SIZE)
+                .nodeId('path')
+                .nodeVal(node => 100 / (node.level + 1))
+                .nodeLabel(node => node.path.split('/').pop())
+                .nodeColor(node => mapTypeToColor(node.path))
+                .linkDirectionalParticles(2)
+                .linkDirectionalParticleWidth(0)
+                .d3Force('collision', d3.forceCollide(node => Math.sqrt(100 / (node.level + 1)) * NODE_REL_SIZE))
+                .d3VelocityDecay(0.8)
+                .onNodeClick(node => {
+                    // Center/zoom on node
+                    graph.centerAt(node.x, node.y, 1000);
+                    graph.zoom(8, 2000);
+                })
+                .onNodeDragEnd(node => {
+                    node.fx = node.x;
+                    node.fy = node.y;
+                })
+
+            fetchGraphData('cl')
+        </script>
+    </body>
+</html>
