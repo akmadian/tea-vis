@@ -103,6 +103,6 @@ dist
 # TernJS port file
 .tern-port
 
-*.css
+src/styles/*.css
 src/data/
 data/scripts/

@@ -41,6 +41,7 @@ const config = {
     new LodashModuleReplacementPlugin,
     new CopyPlugin([
       { from: './src/index.html', to: '.' },
+      { from: './src/styles/styles.css', to: '.'},
       { from: './src/data', to: './data' }
     ])
   ]
