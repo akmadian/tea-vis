@@ -1,11 +1,13 @@
 const webpack = require('webpack');
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 
 const config = {
   entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, 'docs'),
+    path: path.resolve(__dirname, './docs'),
     filename: 'bundle.js'
   },
   module: {
@@ -36,7 +38,11 @@ const config = {
     ]
   },
   plugins: [
-    new LodashModuleReplacementPlugin
+    new LodashModuleReplacementPlugin,
+    new CopyPlugin([
+      { from: './src/index.html', to: '.' },
+      { from: './src/data', to: './data' }
+    ])
   ]
 };
 
